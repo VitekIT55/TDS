@@ -94,7 +94,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UTPSInventoryComponent* InventoryComponent;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Health", meta = (AllowPrivateAccess = "true"))
-	class UTPSCharacterHealthComponent* CharHealthComponent;
+	class UTPSCharacterHealthComponent* CharacterHealthComponent;
 
 	//Cursor material on decal
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cursor")
@@ -191,5 +191,8 @@ public:
 	void RemoveEffect(UTPS_StateEffect* RemoveEffect)override;
 	void AddEffect(UTPS_StateEffect* newEffect)override;
 	//End Interface
+
+	UFUNCTION(BlueprintNativeEvent)
+	void CharDead_BP();
 };
 

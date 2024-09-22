@@ -51,11 +51,11 @@ ATPSCharacter::ATPSCharacter()
 
 	// Inventory
 	InventoryComponent = CreateDefaultSubobject<UTPSInventoryComponent>(TEXT("InventoryComponent"));
-	CharHealthComponent = CreateDefaultSubobject<UTPSCharacterHealthComponent>(TEXT("HealthComponent"));
+	CharacterHealthComponent = CreateDefaultSubobject<UTPSCharacterHealthComponent>(TEXT("HealthComponent"));
 
-	if (CharHealthComponent)
+	if (CharacterHealthComponent)
 	{
-		CharHealthComponent->OnDead.AddDynamic(this, &ATPSCharacter::CharDead);
+		CharacterHealthComponent->OnDead.AddDynamic(this, &ATPSCharacter::CharDead);
 	}
 	if (InventoryComponent)
 	{
@@ -176,7 +176,10 @@ void ATPSCharacter::InputAxisX(float Value)
 
 void ATPSCharacter::InputAttackPressed()
 {
-	AttackCharEvent(true);
+	if (CharacterHealthComponent->UTPSHealthComponent::CharIsDead == false)
+	{
+		AttackCharEvent(true);
+	}
 }
 
 void ATPSCharacter::InputAttackReleased()
@@ -229,7 +232,7 @@ void ATPSCharacter::MovementTick(float DeltaTime)
 	//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Blue, FString::Printf(TEXT("AxisY: %f"), AxisY));
 
 	APlayerController* myController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-	if (myController && !CharHealthComponent->UTPSHealthComponent::CharIsDead)
+	if (myController && CharacterHealthComponent->UTPSHealthComponent::CharIsDead == false)
 	{
 		FHitResult TraceHitResult;
 		myController->GetHitResultUnderCursor(ECC_GameTraceChannel1, true, TraceHitResult);
@@ -481,7 +484,7 @@ void ATPSCharacter::InitWeapon(FName IdWeaponName, FAdditionalWeaponInfo WeaponA
 
 void ATPSCharacter::TryReloadWeapon()
 {
-	if (CurrentWeapon && !CurrentWeapon->WeaponReloading)
+	if (!CharacterHealthComponent->UTPSHealthComponent::CharIsDead && CurrentWeapon && !CurrentWeapon->WeaponReloading)
 	{
 		if (CurrentWeapon->GetWeaponRound() < CurrentWeapon->WeaponSetting.MaxRound && CurrentWeapon->CheckCanWeaponReload())
 			CurrentWeapon->InitReload();
@@ -624,9 +627,9 @@ void ATPSCharacter::TryAbilityEnabled()
 EPhysicalSurface ATPSCharacter::GetSurfuceType()
 {
 	EPhysicalSurface Result = EPhysicalSurface::SurfaceType_Default;
-	if (CharHealthComponent)
+	if (CharacterHealthComponent)
 	{
-		if (CharHealthComponent->GetCurrentShield() <= 0)
+		if (CharacterHealthComponent->GetCurrentShield() <= 0)
 		{
 			if (GetMesh())
 			{
@@ -657,9 +660,14 @@ void ATPSCharacter::AddEffect(UTPS_StateEffect* newEffect)
 	Effects.Add(newEffect);
 }
 
+void ATPSCharacter::CharDead_BP_Implementation()
+{
+	//BP
+}
+
 void ATPSCharacter::CharDead()
 {
-	CharHealthComponent->UTPSHealthComponent::CharIsDead = true;
+	CharacterHealthComponent->UTPSHealthComponent::CharIsDead = true;
 
 	float TimeAnim = 0.0f;
 	int32 rnd = FMath::RandHelper(DeadsAnim.Num());
@@ -671,12 +679,21 @@ void ATPSCharacter::CharDead()
 
 	//bIsAlive = false;
 
+	if (GetController())
+	{
+		GetController()->UnPossess();
+	}
+
 	UnPossessed();
 
 	//Timer rag doll
 	GetWorldTimerManager().SetTimer(TimerHandle_RagDollTimer, this, &ATPSCharacter::EnableRagdoll, TimeAnim, false);
 
 	GetCursorToWorld()->SetVisibility(false);
+
+	AttackCharEvent(false);
+
+	CharDead_BP();
 }
 
 void ATPSCharacter::EnableRagdoll()
@@ -691,10 +708,10 @@ void ATPSCharacter::EnableRagdoll()
 float ATPSCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser)
 {
 	float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
-	if (!CharHealthComponent->UTPSHealthComponent::CharIsDead)
+	if (!CharacterHealthComponent->UTPSHealthComponent::CharIsDead)
 	{
 		//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("World delta for current frame equals %f"), GetWorld()->TimeSeconds));
-		CharHealthComponent->ChangeHealthValue(-DamageAmount);
+		CharacterHealthComponent->ChangeHealthValue(-DamageAmount);
 	}
 
 	if (DamageEvent.IsOfType(FRadialDamageEvent::ClassID))

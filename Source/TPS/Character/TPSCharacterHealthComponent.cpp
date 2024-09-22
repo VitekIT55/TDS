@@ -40,6 +40,8 @@ void UTPSCharacterHealthComponent::ChangeShieldValue(float ChangeValue)
 {
 	Shield += ChangeValue;
 
+	OnShieldChange.Broadcast(Shield, ChangeValue);
+
 	if (Shield > 100.0f)
 	{
 		Shield = 100.0f;
@@ -86,4 +88,9 @@ void UTPSCharacterHealthComponent::RecoveryShield()
 	}
 
 	OnShieldChange.Broadcast(Shield, ShieldRecoverValue);
+}
+
+float UTPSCharacterHealthComponent::GetShieldValue()
+{
+	return Shield;
 }

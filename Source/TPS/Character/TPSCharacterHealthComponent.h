@@ -23,12 +23,6 @@ public:
 	FTimerHandle TimerHandle_CollDownShieldTimer;
 	FTimerHandle TimerHandle_ShieldRecoveryRateTimer;
 
-protected:
-
-	float Shield = 100.0f;
-
-public:
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shield")
 	float CoolDownShieldRecoverTime = 5.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shield")
@@ -36,8 +30,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shield")
 	float ShieldRecoverRate = 0.1f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
 	bool HealthChangeBlock = 0;
+
+protected:
+
+	float Shield = 100.0f;
+
+public:
 
 	void ChangeHealthValue(float ChangeValue) override;
 
@@ -48,4 +48,7 @@ public:
 	void CoolDownShieldEnd();
 
 	void RecoveryShield();
+
+	UFUNCTION(BlueprintCallable)
+	float GetShieldValue();
 };
