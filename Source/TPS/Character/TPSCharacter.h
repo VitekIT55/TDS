@@ -92,7 +92,7 @@ public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	class UTPSInventoryComponent* InventoryComponent;
+	class UTPSInventoryComponent* CharacterInventoryComponent;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Health", meta = (AllowPrivateAccess = "true"))
 	class UTPSCharacterHealthComponent* CharacterHealthComponent;
 

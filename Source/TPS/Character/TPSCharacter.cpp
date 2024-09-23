@@ -50,16 +50,16 @@ ATPSCharacter::ATPSCharacter()
 	TopDownCameraComponent->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
 	// Inventory
-	InventoryComponent = CreateDefaultSubobject<UTPSInventoryComponent>(TEXT("InventoryComponent"));
+	CharacterInventoryComponent = CreateDefaultSubobject<UTPSInventoryComponent>(TEXT("InventoryComponent"));
 	CharacterHealthComponent = CreateDefaultSubobject<UTPSCharacterHealthComponent>(TEXT("HealthComponent"));
 
 	if (CharacterHealthComponent)
 	{
 		CharacterHealthComponent->OnDead.AddDynamic(this, &ATPSCharacter::CharDead);
 	}
-	if (InventoryComponent)
+	if (CharacterInventoryComponent)
 	{
-		InventoryComponent->OnSwitchWeapon.AddDynamic(this, &ATPSCharacter::InitWeapon);
+		CharacterInventoryComponent->OnSwitchWeapon.AddDynamic(this, &ATPSCharacter::InitWeapon);
 	}
 
 	// Activate ticking in order to update the cursor every frame.
@@ -470,8 +470,8 @@ void ATPSCharacter::InitWeapon(FName IdWeaponName, FAdditionalWeaponInfo WeaponA
 					if (CurrentWeapon->GetWeaponRound() <= 0 && CurrentWeapon->CheckCanWeaponReload())
 						CurrentWeapon->InitReload();
 
-					if (InventoryComponent)
-						InventoryComponent->OnWeaponAmmoAviable.Broadcast(myWeapon->WeaponSetting.WeaponType);
+					if (CharacterInventoryComponent)
+						CharacterInventoryComponent->OnWeaponAmmoAviable.Broadcast(myWeapon->WeaponSetting.WeaponType);
 				}
 			}
 		}
@@ -498,10 +498,10 @@ void ATPSCharacter::WeaponReloadStart(UAnimMontage* Anim)
 
 void ATPSCharacter::WeaponReloadEnd(bool bIsSuccess, int32 AmmoTake)
 {
-	if (InventoryComponent && CurrentWeapon)
+	if (CharacterInventoryComponent && CurrentWeapon)
 	{
-		InventoryComponent->AmmoSlotChangeValue(CurrentWeapon->WeaponSetting.WeaponType, AmmoTake);
-		InventoryComponent->SetAdditionalInfoWeapon(CurrentIndexWeapon, CurrentWeapon->AdditionalWeaponInfo);
+		CharacterInventoryComponent->AmmoSlotChangeValue(CurrentWeapon->WeaponSetting.WeaponType, AmmoTake);
+		CharacterInventoryComponent->SetAdditionalInfoWeapon(CurrentIndexWeapon, CurrentWeapon->AdditionalWeaponInfo);
 	}
 	WeaponReloadEnd_BP(bIsSuccess);
 }
@@ -509,9 +509,9 @@ void ATPSCharacter::WeaponReloadEnd(bool bIsSuccess, int32 AmmoTake)
 bool ATPSCharacter::TrySwitchWeaponToIndexByKeyInput(int32 ToIndex)
 {
 	bool bIsSuccess = false;
-	if (CurrentWeapon && !CurrentWeapon->WeaponReloading && InventoryComponent->WeaponSlots.IsValidIndex(ToIndex))
+	if (CurrentWeapon && !CurrentWeapon->WeaponReloading && CharacterInventoryComponent->WeaponSlots.IsValidIndex(ToIndex))
 	{
-		if (CurrentIndexWeapon != ToIndex && InventoryComponent)
+		if (CurrentIndexWeapon != ToIndex && CharacterInventoryComponent)
 		{
 			int32 OldIndex = CurrentIndexWeapon;
 			FAdditionalWeaponInfo OldInfo;
@@ -523,7 +523,7 @@ bool ATPSCharacter::TrySwitchWeaponToIndexByKeyInput(int32 ToIndex)
 					CurrentWeapon->CancelReload();
 			}
 
-			bIsSuccess = InventoryComponent->SwitchWeaponByIndex(ToIndex, OldIndex, OldInfo);
+			bIsSuccess = CharacterInventoryComponent->SwitchWeaponByIndex(ToIndex, OldIndex, OldInfo);
 		}
 	}
 	return bIsSuccess;
@@ -531,10 +531,10 @@ bool ATPSCharacter::TrySwitchWeaponToIndexByKeyInput(int32 ToIndex)
 
 void ATPSCharacter::DropCurrentWeapon()
 {
-	if (InventoryComponent)
+	if (CharacterInventoryComponent)
 	{
 		FDropItem ItemInfo;
-		InventoryComponent->DropWeaponByIndex(CurrentIndexWeapon, ItemInfo);
+		CharacterInventoryComponent->DropWeaponByIndex(CurrentIndexWeapon, ItemInfo);
 	}
 }
 
@@ -550,8 +550,8 @@ void ATPSCharacter::WeaponReloadEnd_BP_Implementation(bool bIsSuccess)
 
 void ATPSCharacter::WeaponFireStart(UAnimMontage* Anim)
 {
-	if (InventoryComponent && CurrentWeapon)
-		InventoryComponent->SetAdditionalInfoWeapon(CurrentIndexWeapon, CurrentWeapon->AdditionalWeaponInfo);
+	if (CharacterInventoryComponent && CurrentWeapon)
+		CharacterInventoryComponent->SetAdditionalInfoWeapon(CurrentIndexWeapon, CurrentWeapon->AdditionalWeaponInfo);
 	WeaponFireStart_BP(Anim);
 }
 
@@ -567,7 +567,7 @@ UDecalComponent* ATPSCharacter::GetCursorToWorld()
 
 void ATPSCharacter::TrySwitchNextWeapon()
 {
-	if (CurrentWeapon && !CurrentWeapon->WeaponReloading && InventoryComponent->WeaponSlots.Num() > 1)
+	if (CurrentWeapon && !CurrentWeapon->WeaponReloading && CharacterInventoryComponent->WeaponSlots.Num() > 1)
 	{
 		//We have more then one weapon go switch
 		int8 OldIndex = CurrentIndexWeapon;
@@ -579,9 +579,9 @@ void ATPSCharacter::TrySwitchNextWeapon()
 				CurrentWeapon->CancelReload();
 		}
 
-		if (InventoryComponent)
+		if (CharacterInventoryComponent)
 		{
-			if (InventoryComponent->SwitchWeaponToIndexByNextPreviosIndex(CurrentIndexWeapon + 1, OldIndex, OldInfo, true))
+			if (CharacterInventoryComponent->SwitchWeaponToIndexByNextPreviosIndex(CurrentIndexWeapon + 1, OldIndex, OldInfo, true))
 			{
 			}
 		}
@@ -590,7 +590,7 @@ void ATPSCharacter::TrySwitchNextWeapon()
 
 void ATPSCharacter::TrySwitchPreviosWeapon()
 {
-	if (CurrentWeapon && !CurrentWeapon->WeaponReloading && InventoryComponent->WeaponSlots.Num() > 1)
+	if (CurrentWeapon && !CurrentWeapon->WeaponReloading && CharacterInventoryComponent->WeaponSlots.Num() > 1)
 	{
 		//We have more then one weapon go switch
 		int8 OldIndex = CurrentIndexWeapon;
@@ -602,10 +602,10 @@ void ATPSCharacter::TrySwitchPreviosWeapon()
 				CurrentWeapon->CancelReload();
 		}
 
-		if (InventoryComponent)
+		if (CharacterInventoryComponent)
 		{
 			//InventoryComponent->SetAdditionalInfoWeapon(OldIndex, GetCurrentWeapon()->AdditionalWeaponInfo);
-			if (InventoryComponent->SwitchWeaponToIndexByNextPreviosIndex(CurrentIndexWeapon - 1, OldIndex, OldInfo, false))
+			if (CharacterInventoryComponent->SwitchWeaponToIndexByNextPreviosIndex(CurrentIndexWeapon - 1, OldIndex, OldInfo, false))
 			{
 			}
 		}

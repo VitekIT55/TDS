@@ -95,4 +95,12 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Interface")
 	bool GetDropItemInfoFromInventory(int32 IndexSlot, FDropItem& DropItemInfo);
+
+	UFUNCTION(BlueprintCallable, Category = "Inv")
+	TArray<FWeaponSlot> GetWeaponSlots();
+	UFUNCTION(BlueprintCallable, Category = "Inv")
+	TArray<FAmmoSlot> GetAmmoSlots();
+
+	UFUNCTION(BlueprintCallable, Category = "Inv")
+	void InitInventory(TArray<FWeaponSlot> NewWeaponSlotsInfo, TArray<FAmmoSlot> NewAmmoSlotsInfo);
 };
