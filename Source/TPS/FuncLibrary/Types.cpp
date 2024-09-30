@@ -6,7 +6,7 @@
 #include "../Interface/TPS_IGameActor.h"
 
 
-void UTypes::AddEffectBySurfaceType(AActor* TakeEffectActor, TSubclassOf<UTPS_StateEffect> AddEffectClass, EPhysicalSurface SurfaceType)
+void UTypes::AddEffectBySurfaceType(AActor* TakeEffectActor, FName NameBoneHit, TSubclassOf<UTPS_StateEffect> AddEffectClass, EPhysicalSurface SurfaceType)
 {
 	if (SurfaceType != EPhysicalSurface::SurfaceType_Default && TakeEffectActor && AddEffectClass)
 	{
@@ -59,7 +59,7 @@ void UTypes::AddEffectBySurfaceType(AActor* TakeEffectActor, TSubclassOf<UTPS_St
 						UTPS_StateEffect* NewEffect = NewObject<UTPS_StateEffect>(TakeEffectActor, AddEffectClass);
 						if (NewEffect)
 						{
-							NewEffect->InitObject(TakeEffectActor);
+							NewEffect->InitObject(TakeEffectActor, NameBoneHit);
 						}
 					}
 

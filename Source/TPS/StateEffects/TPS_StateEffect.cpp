@@ -7,7 +7,7 @@
 #include "../Interface/TPS_IGameActor.h"
 #include "Kismet/GameplayStatics.h"
 
-bool UTPS_StateEffect::InitObject(AActor* Actor)
+bool UTPS_StateEffect::InitObject(AActor* Actor, FName NameBoneHit)
 {
 
 	myActor = Actor;
@@ -36,9 +36,9 @@ void UTPS_StateEffect::DestroyObject()
 	}	
 }
 
-bool UTPS_StateEffect_ExecuteOnce::InitObject(AActor* Actor)
+bool UTPS_StateEffect_ExecuteOnce::InitObject(AActor* Actor, FName NameBoneHit)
 {
-	Super::InitObject(Actor);
+	Super::InitObject(Actor, NameBoneHit);
 	ExecuteOnce();
 	return true;
 }
@@ -62,9 +62,9 @@ void UTPS_StateEffect_ExecuteOnce::ExecuteOnce()
 	DestroyObject();
 }
 
-bool UTPS_StateEffect_ExecuteTimer::InitObject(AActor* Actor)
+bool UTPS_StateEffect_ExecuteTimer::InitObject(AActor* Actor, FName NameBoneHit)
 {
-	Super::InitObject(Actor);
+	Super::InitObject(Actor, NameBoneHit);
 
 	GetWorld()->GetTimerManager().SetTimer(TimerHandle_EffectTimer, this, &UTPS_StateEffect_ExecuteTimer::DestroyObject, Timer, false);
 	GetWorld()->GetTimerManager().SetTimer(TimerHandle_ExecuteTimer, this, &UTPS_StateEffect_ExecuteTimer::Execute, RateTime, true);
@@ -74,7 +74,15 @@ bool UTPS_StateEffect_ExecuteTimer::InitObject(AActor* Actor)
 		FName NameBoneToAttached;
 		FVector Loc = FVector(0);
 		
-		ParticleEmitter = UGameplayStatics::SpawnEmitterAttached(ParticleEffect,myActor->GetRootComponent(), NameBoneToAttached, Loc, FRotator::ZeroRotator,EAttachLocation::SnapToTarget,false);
+		USceneComponent* myMesh = Cast<USceneComponent>(myActor->GetComponentByClass(USkeletalMeshComponent::StaticClass()));
+		if (myMesh)
+		{
+			ParticleEmitter = UGameplayStatics::SpawnEmitterAttached(ParticleEffect, myMesh, NameBoneToAttached, Loc, FRotator::ZeroRotator, EAttachLocation::SnapToTarget, false);
+		}
+		else
+		{
+			ParticleEmitter = UGameplayStatics::SpawnEmitterAttached(ParticleEffect, myActor->GetRootComponent(), NameBoneToAttached, Loc, FRotator::ZeroRotator, EAttachLocation::SnapToTarget, false);
+		}
 	}
 	UTPSCharacterHealthComponent* myCharHealthComp = Cast<UTPSCharacterHealthComponent>(myActor->GetComponentByClass(UTPSCharacterHealthComponent::StaticClass()));
 	if (myCharHealthComp)
