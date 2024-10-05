@@ -44,7 +44,7 @@ public:
 	UFUNCTION()
 	void BulletCollisionSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	void InitProjectile(FProjectileInfo InitParam);
 	UFUNCTION()
 	virtual void ImpactProjectile();

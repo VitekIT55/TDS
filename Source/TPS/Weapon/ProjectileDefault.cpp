@@ -2,6 +2,7 @@
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/GameEngine.h"
+#include "Perception/AISense_Damage.h"
 
 // Sets default values
 AProjectileDefault::AProjectileDefault()
@@ -87,6 +88,8 @@ void AProjectileDefault::BulletCollisionSphereHit(UPrimitiveComponent* HitComp, 
 		UTypes::AddEffectBySurfaceType(Hit.GetActor(), Hit.BoneName, ProjectileSetting.Effect, mySurfacetype);
 	}
 	UGameplayStatics::ApplyPointDamage(OtherActor, ProjectileSetting.ProjectileDamage, Hit.TraceStart, Hit, GetInstigatorController(), this, NULL);
+	UAISense_Damage::ReportDamageEvent(GetWorld(), Hit.GetActor(), GetInstigator(), ProjectileSetting.ProjectileDamage, Hit.Location, Hit.Location);
+
 	ImpactProjectile();
 }
 
@@ -102,7 +105,7 @@ void AProjectileDefault::InitProjectile(FProjectileInfo InitParam)
 {
 	ProjectileSetting = InitParam;
 	BulletProjectileMovement->InitialSpeed = ProjectileSetting.ProjectileInitSpeed;
-	BulletProjectileMovement->MaxSpeed = ProjectileSetting.ProjectileInitSpeed;
+	BulletProjectileMovement->MaxSpeed = ProjectileSetting.ProjectileMaxSpeed;
 	this->SetLifeSpan(ProjectileSetting.ProjectileLifeTime);
 	if (ProjectileSetting.ProjectileStaticMesh)
 	{
