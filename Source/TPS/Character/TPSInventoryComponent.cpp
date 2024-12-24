@@ -601,22 +601,11 @@ TArray<FAmmoSlot> UTPSInventoryComponent::GetAmmoSlots()
 	return AmmoSlots;
 }
 
-void UTPSInventoryComponent::InitInventory(TArray<FWeaponSlot> NewWeaponSlotsInfo, TArray<FAmmoSlot> NewAmmoSlotsInfo)
+void UTPSInventoryComponent::InitInventory_OnServer_Implementation(const TArray<FWeaponSlot>& NewWeaponSlotsInfo, const TArray<FAmmoSlot>& NewAmmoSlotsInfo)
 {
 	WeaponSlots = NewWeaponSlotsInfo;
 	AmmoSlots = NewAmmoSlotsInfo;
 	//Find init weaponsSlots and First Init Weapon
-	for (int8 i = 0; i < WeaponSlots.Num(); i++)
-	{
-		UTPSGameInstance* myGI = Cast<UTPSGameInstance>(GetWorld()->GetGameInstance());
-		if (myGI)
-		{
-			if (!WeaponSlots[i].NameItem.IsNone())
-			{
-			}
-
-		}
-	}
 
 	MaxSlotsWeapon = WeaponSlots.Num();
 

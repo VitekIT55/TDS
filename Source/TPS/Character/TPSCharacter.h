@@ -62,6 +62,7 @@ protected:
 
 	//EMovementState MovementState = EMovementState::Run_State;
 
+	UPROPERTY(Replicated)
 	AWeaponDefault* CurrentWeapon = nullptr;
 
 	UDecalComponent* CurrentCursor = nullptr;
@@ -124,7 +125,7 @@ private:
 public:
 
 	//Movement
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement", Replicated)
 	EMovementState MovementState = EMovementState::Run_State;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	FChatacterSpeed MovementInfo;
@@ -196,5 +197,15 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent)
 	void CharDead_BP();
+
+	UFUNCTION(Server, Unreliable)
+	void SetActorRotationByYaw_OnServer(float Yaw);
+	UFUNCTION(NetMulticast, Unreliable)
+	void SetActorRotationByYaw_Multicast(float Yaw);
+
+	UFUNCTION(Server, Reliable)
+	void SetMovementState_OnServer(EMovementState NewState);
+	UFUNCTION(NetMulticast, Reliable)
+	void SetMovementState_Multicast(EMovementState NewState);
 };
 

@@ -14,7 +14,9 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Engine/World.h"
 #include "../Game/TPSGameInstance.h"
+#include "../TPS.h"
 #include "../Weapon/ProjectileDefault.h"
+#include "Net/UnrealNetwork.h"
 
 ATPSCharacter::ATPSCharacter()
 {
@@ -65,6 +67,9 @@ ATPSCharacter::ATPSCharacter()
 	// Activate ticking in order to update the cursor every frame.
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.bStartWithTickEnabled = true;
+
+	//Network
+	bReplicates = true;
 }
 
 void ATPSCharacter::Tick(float DeltaSeconds)
@@ -74,7 +79,7 @@ void ATPSCharacter::Tick(float DeltaSeconds)
 	if (CurrentCursor)
 	{
 		APlayerController* myPC = Cast<APlayerController>(GetController());
-		if (myPC)
+		if (myPC && myPC->IsLocalPlayerController())
 		{
 			FHitResult TraceHitResult;
 			myPC->GetHitResultUnderCursor(ECC_Visibility, true, TraceHitResult);
@@ -109,7 +114,10 @@ void ATPSCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (CursorMaterial)
+
+
+	if (GetWorld() && GetWorld()->GetNetMode() != NM_DedicatedServer 
+		&& CursorMaterial && GetLocalRole() == ROLE_AutonomousProxy || GetLocalRole() == ROLE_Authority)
 	{
 		CurrentCursor = UGameplayStatics::SpawnDecalAtLocation(GetWorld(), CursorMaterial, CursorSize, FVector(0));
 	}
@@ -226,18 +234,22 @@ void ATPSCharacter::InputAimReleased()
 void ATPSCharacter::MovementTick(float DeltaTime)
 {
 	ChangeMovementState();
-	AddMovementInput(FVector(1.0f, 0.0f, 0.0f), AxisX);
-	AddMovementInput(FVector(0.0f, 1.0f, 0.0f), AxisY);
-	//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("AxisX: %f"), AxisX));
-	//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Blue, FString::Printf(TEXT("AxisY: %f"), AxisY));
 
 	APlayerController* myController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-	if (myController && CharacterHealthComponent->UTPSHealthComponent::CharIsDead == false)
+	if (GetController() && GetController()->IsLocalPlayerController() && 
+		myController && CharacterHealthComponent->UTPSHealthComponent::CharIsDead == false)
 	{
+		AddMovementInput(FVector(1.0f, 0.0f, 0.0f), AxisX);
+		AddMovementInput(FVector(0.0f, 1.0f, 0.0f), AxisY);
+
+		FString SEnum = UEnum::GetValueAsString(GetMovementState());
+		UE_LOG(LogTPS_Net, Warning, TEXT("Movement state - %s"), *SEnum);
+
 		FHitResult TraceHitResult;
 		myController->GetHitResultUnderCursor(ECC_GameTraceChannel1, true, TraceHitResult);
 		float FindRotatorResultYaw = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), TraceHitResult.Location).Yaw;
 		SetActorRotation(FQuat(FRotator(0.0f, FindRotatorResultYaw, 0.0f)));
+		SetActorRotationByYaw_OnServer(FindRotatorResultYaw);
 		int Xdir = 0; int Ydir = 0;
 		if (-22.5 <= FindRotatorResultYaw && FindRotatorResultYaw <= 22.5)
 		{
@@ -287,29 +299,29 @@ void ATPSCharacter::MovementTick(float DeltaTime)
 		{
 			SprintAllow = 0;
 		}
-		//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Purple, FString::Printf(TEXT("Xdir: %i"), Xdir));
-		//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Orange, FString::Printf(TEXT("Ydir: %i"), Ydir));
-		//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Black, FString::Printf(TEXT("Sprint: %i"), SprintAllow));
 		if (CurrentWeapon)
 		{
 			FVector Displacement = FVector(0);
+			bool bIsReduceDispersion = false;
 			switch (MovementState)
 			{
 			case EMovementState::Aim_State:
 				Displacement = FVector(0.0f, 0.0f, 160.0f);
-				CurrentWeapon->ShouldReduceDispersion = true;
+				//CurrentWeapon->ShouldReduceDispersion = true;
+				bIsReduceDispersion = true;
 				break;
 			case EMovementState::AimWalk_State:
-				CurrentWeapon->ShouldReduceDispersion = true;
+				//CurrentWeapon->ShouldReduceDispersion = true;
+				bIsReduceDispersion = true;
 				Displacement = FVector(0.0f, 0.0f, 160.0f);
 				break;
 			case EMovementState::Walk_State:
 				Displacement = FVector(0.0f, 0.0f, 120.0f);
-				CurrentWeapon->ShouldReduceDispersion = false;
+				//CurrentWeapon->ShouldReduceDispersion = false;
 				break;
 			case EMovementState::Run_State:
 				Displacement = FVector(0.0f, 0.0f, 120.0f);
-				CurrentWeapon->ShouldReduceDispersion = false;
+				//CurrentWeapon->ShouldReduceDispersion = false;
 				break;
 			case EMovementState::Sprint_State:
 				break;
@@ -317,8 +329,8 @@ void ATPSCharacter::MovementTick(float DeltaTime)
 				break;
 			}
 
-			CurrentWeapon->ShootEndLocation = TraceHitResult.Location + Displacement;
-			//aim cursor like 3d Widget?
+			//CurrentWeapon->ShootEndLocation = TraceHitResult.Location + Displacement;
+			CurrentWeapon->UpdateWeaponByCharacterMovementState_OnServer(TraceHitResult.Location + Displacement, bIsReduceDispersion);
 		}
 	}
 }
@@ -350,7 +362,7 @@ void ATPSCharacter::AttackCharEvent(bool bIsFiring)
 	if (myWeapon)
 	{
 		//ToDo Check melee or range
-		myWeapon->SetWeaponStateFire(bIsFiring);
+		myWeapon->SetWeaponStateFire_OnServer(bIsFiring);
 	}
 	else
 		UE_LOG(LogTemp, Warning, TEXT("ATPSCharacter::AttackCharEvent - CurrentWeapon -NULL"));
@@ -386,9 +398,10 @@ void ATPSCharacter::CharacterUpdate()
 
 void ATPSCharacter::ChangeMovementState()
 {
+	EMovementState NewState = EMovementState::Run_State;
 	if (!WalkEnabled && !SprintEnabled && !AimEnabled)
 	{
-		MovementState = EMovementState::Run_State;
+		NewState = EMovementState::Run_State;
 	}
 	else
 	{
@@ -396,25 +409,27 @@ void ATPSCharacter::ChangeMovementState()
 		{
 			WalkEnabled = false;
 			AimEnabled = false;
-			MovementState = EMovementState::Sprint_State;
+			NewState = EMovementState::Sprint_State;
 		}
 		else if (WalkEnabled && !SprintEnabled && AimEnabled)
-			MovementState = EMovementState::AimWalk_State;
+			NewState = EMovementState::AimWalk_State;
 		else if (WalkEnabled && !SprintEnabled && !AimEnabled)
-			MovementState = EMovementState::Walk_State;
+			NewState = EMovementState::Walk_State;
 		else if (!WalkEnabled && !SprintEnabled && AimEnabled)
-			MovementState = EMovementState::Aim_State;
+			NewState = EMovementState::Aim_State;
 		else
 		{
-			MovementState = EMovementState::Run_State;
+			NewState = EMovementState::Run_State;
 		}
 	}
-	CharacterUpdate();
+
+	SetMovementState_OnServer(NewState);
+	//CharacterUpdate();
 	//Weapon state update
 	AWeaponDefault* myWeapon = GetCurrentWeapon();
 	if (myWeapon)
 	{
-		myWeapon->UpdateStateWeapon(MovementState);
+		myWeapon->UpdateStateWeapon_OnServer(NewState);
 	}
 }
 
@@ -425,6 +440,7 @@ AWeaponDefault* ATPSCharacter::GetCurrentWeapon()
 
 void ATPSCharacter::InitWeapon(FName IdWeaponName, FAdditionalWeaponInfo WeaponAdditionalInfo, int32 NewCurrentIndexWeapon)
 {
+	//On Server
 	if (CurrentWeapon)
 	{
 		CurrentWeapon->Destroy();
@@ -455,17 +471,14 @@ void ATPSCharacter::InitWeapon(FName IdWeaponName, FAdditionalWeaponInfo WeaponA
 					CurrentWeapon = myWeapon;
 
 					myWeapon->WeaponSetting = myWeaponInfo;
-
-					//myWeapon->AdditionalWeaponInfo.Round = myWeaponInfo.MaxRound;
+					myWeapon->IdWeaponName = IdWeaponName;
 
 					myWeapon->ReloadTimer = myWeaponInfo.ReloadTime;
-					myWeapon->UpdateStateWeapon(MovementState);
+					myWeapon->UpdateStateWeapon_OnServer(MovementState);
 
 					myWeapon->AdditionalWeaponInfo = WeaponAdditionalInfo;
-					//if(InventoryComponent)
-					CurrentIndexWeapon = NewCurrentIndexWeapon;//fix
+					CurrentIndexWeapon = NewCurrentIndexWeapon;
 
-					//Not Forget remove delegate on change/drop weapon
 					myWeapon->OnWeaponReloadStart.AddDynamic(this, &ATPSCharacter::WeaponReloadStart);
 					myWeapon->OnWeaponReloadEnd.AddDynamic(this, &ATPSCharacter::WeaponReloadEnd);
 
@@ -665,6 +678,30 @@ void ATPSCharacter::AddEffect(UTPS_StateEffect* newEffect)
 	Effects.Add(newEffect);
 }
 
+void ATPSCharacter::SetActorRotationByYaw_OnServer_Implementation(float Yaw)
+{
+	SetActorRotationByYaw_Multicast(Yaw);
+}
+
+void ATPSCharacter::SetActorRotationByYaw_Multicast_Implementation(float Yaw)
+{
+	if (Controller && !Controller->IsLocalPlayerController())
+	{
+		SetActorRotation(FQuat(FRotator(0.0f, Yaw, 0.0f)));
+	}
+}
+
+void ATPSCharacter::SetMovementState_OnServer_Implementation(EMovementState NewState)
+{
+	SetMovementState_Multicast(NewState);
+}
+
+void ATPSCharacter::SetMovementState_Multicast_Implementation(EMovementState NewState)
+{
+	MovementState = NewState;
+	CharacterUpdate();
+}
+
 void ATPSCharacter::CharDead_BP_Implementation()
 {
 	//BP
@@ -729,4 +766,12 @@ float ATPSCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const& D
 	}
 
 	return ActualDamage;
+}
+
+void ATPSCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ATPSCharacter, MovementState);
+	DOREPLIFETIME(ATPSCharacter, CurrentWeapon);
 }
