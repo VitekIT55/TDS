@@ -66,9 +66,11 @@ void AProjectileDefault_Grenade::Explode()
 	{
 		//UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ProjectileSetting.ExploseFX, GetActorLocation(), GetActorRotation(), FVector(1.0f));
 		GrenadeHitFX_Multicast(ProjectileSetting.ExploseFX, GetActorLocation(), GetActorRotation());
-		auto a = GetActorLocation().X;
-		auto b = GetActorLocation().Y;
-		OnScreenMessage_Multicast(a, b);
+		float a = GetActorLocation().X;
+		float b = GetActorLocation().Y;
+		float c = GetActorLocation().Z;
+		TArray<float> arr = {a, b, c};
+		OnScreenMessage_Multicast(arr, 3);
 	}
 	if (ProjectileSetting.ExploseSound)
 	{
@@ -88,9 +90,14 @@ void AProjectileDefault_Grenade::Explode()
 	this->Destroy();
 }
 
-void AProjectileDefault_Grenade::OnScreenMessage_Multicast_Implementation(float a, float b)
+void AProjectileDefault_Grenade::OnScreenMessage_Multicast_Implementation(const TArray<float> &a, float len)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::Printf(TEXT("GrenadeLocation: %f %f"), a, b));
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::Printf(TEXT("Array lenght: %i"), sizeof(a)));
+	for (int i = 0; i < len; i++)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::Printf(TEXT("GrenadeLocation: %f"), a[i]));
+	}
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::Printf(TEXT("//////")));
 }
 
 void AProjectileDefault_Grenade::GrenadeHitFX_Multicast_Implementation(UParticleSystem* FxTemplate, FVector Location, FRotator Rotation)
