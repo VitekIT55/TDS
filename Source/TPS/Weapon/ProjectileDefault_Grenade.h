@@ -43,5 +43,5 @@ public:
 	UFUNCTION(NetMulticast, Unreliable)
 	void GrenadeHitSound_Multicast(USoundBase* HitSound, FVector Location);
 	UFUNCTION(NetMulticast, Unreliable)
-	void OnScreenMessage_Multicast(const TArray<float> &a, float len);
+	void OnScreenMessage_Multicast(const TArray<float> &a, float len, const FString &ShowText);
 };

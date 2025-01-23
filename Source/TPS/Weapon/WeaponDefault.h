@@ -38,6 +38,8 @@ public:
 	FWeaponInfo WeaponSetting;
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Weapon Info")
 	FAdditionalWeaponInfo AdditionalWeaponInfo;
+	//UPROPERTY(Replicated, EditAnywhere)
+	//FProjectileInfo ProjectileInfo;
 
 protected:
 	// Called when the game starts or when spawned

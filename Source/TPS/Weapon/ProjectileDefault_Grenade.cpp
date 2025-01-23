@@ -51,10 +51,17 @@ void AProjectileDefault_Grenade::ImpactProjectile()
 {
 	//Init Grenade
 	TimerEnabled = true;
+	//TArray<float> arr = { float(TimerEnabled) };
+	//FString TEXT = "TimerEnabled";
+	//OnScreenMessage_Multicast(arr, 1, TEXT);
 }
 
 void AProjectileDefault_Grenade::Explode()
 {
+	//TArray<float> arr1 = { 0.0f };
+	//FString TEXT1 = "Explode!";
+	//OnScreenMessage_Multicast(arr1, 1, TEXT1);
+
 	FHitResult Hit;
 	if (DebugExplodeShow)
 	{
@@ -62,15 +69,22 @@ void AProjectileDefault_Grenade::Explode()
 		DrawDebugSphere(GetWorld(), GetActorLocation(), ProjectileSetting.ProjectileMaxRadiusDamage, 12, FColor::Red, false, 12.0f);
 	}
 	TimerEnabled = false;
+	TArray<float> arr2 = { 1 };
+	FString TEXT2 = ProjectileSetting.ExploseFX->GetName();
+	OnScreenMessage_Multicast(arr2, 1, TEXT2);
 	if (ProjectileSetting.ExploseFX)
 	{
+		TArray<float> arr1 = { 0.0f };
+		FString TEXT1 = "ExplodeFX!";
+		OnScreenMessage_Multicast(arr1, 1, TEXT1);
 		//UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ProjectileSetting.ExploseFX, GetActorLocation(), GetActorRotation(), FVector(1.0f));
 		GrenadeHitFX_Multicast(ProjectileSetting.ExploseFX, GetActorLocation(), GetActorRotation());
 		float a = GetActorLocation().X;
 		float b = GetActorLocation().Y;
 		float c = GetActorLocation().Z;
 		TArray<float> arr = {a, b, c};
-		OnScreenMessage_Multicast(arr, 3);
+		FString TEXT = "GrenadeLocation";
+		OnScreenMessage_Multicast(arr, 3, TEXT);
 	}
 	if (ProjectileSetting.ExploseSound)
 	{
@@ -90,14 +104,15 @@ void AProjectileDefault_Grenade::Explode()
 	this->Destroy();
 }
 
-void AProjectileDefault_Grenade::OnScreenMessage_Multicast_Implementation(const TArray<float> &a, float len)
+void AProjectileDefault_Grenade::OnScreenMessage_Multicast_Implementation(const TArray<float> &a, float len, const FString &ShowText)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::Printf(TEXT("Array lenght: %i"), sizeof(a)));
+	//For Testing Multicast
+	GEngine->AddOnScreenDebugMessage(1, 4.0f, FColor::Red, FString::Printf(TEXT("Array lenght: %i"), sizeof(a)));
 	for (int i = 0; i < len; i++)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::Printf(TEXT("GrenadeLocation: %f"), a[i]));
+		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, FString::Printf(TEXT("%s: %f"), *ShowText, a[i]));
 	}
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::Printf(TEXT("//////")));
+	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, FString::Printf(TEXT("//////")));
 }
 
 void AProjectileDefault_Grenade::GrenadeHitFX_Multicast_Implementation(UParticleSystem* FxTemplate, FVector Location, FRotator Rotation)
