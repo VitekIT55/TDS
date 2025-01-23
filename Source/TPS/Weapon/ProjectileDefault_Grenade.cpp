@@ -69,9 +69,9 @@ void AProjectileDefault_Grenade::Explode()
 		DrawDebugSphere(GetWorld(), GetActorLocation(), ProjectileSetting.ProjectileMaxRadiusDamage, 12, FColor::Red, false, 12.0f);
 	}
 	TimerEnabled = false;
-	TArray<float> arr2 = { 1 };
-	FString TEXT2 = ProjectileSetting.ExploseFX->GetName();
-	OnScreenMessage_Multicast(arr2, 1, TEXT2);
+	//TArray<float> arr2 = { 1 };
+	//FString TEXT2 = ProjectileSetting.ExploseFX->GetName(); //Error on client: EXCEPTION_ACCESS_VIOLATION
+	//OnScreenMessage_Multicast(arr2, 1, TEXT2);
 	if (ProjectileSetting.ExploseFX)
 	{
 		TArray<float> arr1 = { 0.0f };
