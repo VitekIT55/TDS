@@ -283,29 +283,34 @@ void AWeaponDefault::Fire()
 
 				if (Hit.GetActor() && Hit.PhysMaterial.IsValid())
 				{
+					//FXShotgunHitDecal_Multicast(UMaterialInterface * DecalMaterial, UPrimitiveComponent * OtherComp, FHitResult HitResult);
 					EPhysicalSurface mySurfacetype = UGameplayStatics::GetSurfaceType(Hit);
 
 					if (WeaponSetting.ProjectileSetting.HitDecals.Contains(mySurfacetype))
 					{
 						UMaterialInterface* myMaterial = WeaponSetting.ProjectileSetting.HitDecals[mySurfacetype];
 						if (myMaterial && Hit.GetComponent())
-							UGameplayStatics::SpawnDecalAttached(myMaterial, FVector(20.0f), Hit.GetComponent(), NAME_None, Hit.ImpactPoint, Hit.ImpactNormal.Rotation(), EAttachLocation::KeepWorldPosition);
+						{
+							ShotgunHitDecal_Multicast(myMaterial, Hit.GetComponent(), Hit);
+							//UGameplayStatics::SpawnDecalAttached(myMaterial, FVector(20.0f), Hit.GetComponent(), NAME_None, Hit.ImpactPoint, Hit.ImpactNormal.Rotation(), EAttachLocation::KeepWorldPosition);
+						}
 					}
 					if (WeaponSetting.ProjectileSetting.HitFXs.Contains(mySurfacetype))
 					{
-						UParticleSystem* myParicle = WeaponSetting.ProjectileSetting.HitFXs[mySurfacetype];
-						if (myParicle)
+						UParticleSystem* myParticle = WeaponSetting.ProjectileSetting.HitFXs[mySurfacetype];
+						if (myParticle)
 						{
-							UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), myParicle, FTransform(Hit.ImpactNormal.Rotation(), Hit.ImpactPoint, FVector(1.0f)));
+							ShotgunHitFX_Multicast(myParticle, Hit);
+							//UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), myParicle, FTransform(Hit.ImpactNormal.Rotation(), Hit.ImpactPoint, FVector(1.0f)));
 						}
 					}
 					if (WeaponSetting.ProjectileSetting.HitSound)
 					{
-						UGameplayStatics::PlaySoundAtLocation(GetWorld(), WeaponSetting.ProjectileSetting.HitSound, Hit.ImpactPoint);
+						ShotgunHitSound_Multicast(WeaponSetting.ProjectileSetting.HitSound, Hit);
+						//UGameplayStatics::PlaySoundAtLocation(GetWorld(), WeaponSetting.ProjectileSetting.HitSound, Hit.ImpactPoint);
 					}
 
 					UTypes::AddEffectBySurfaceType(Hit.GetActor(), Hit.BoneName, ProjectileInfo.Effect, mySurfacetype);
-
 					UGameplayStatics::ApplyPointDamage(Hit.GetActor(), WeaponSetting.ProjectileSetting.ProjectileDamage, Hit.TraceStart, Hit, GetInstigatorController(), this, NULL);
 				}
 			}
@@ -621,4 +626,19 @@ void AWeaponDefault::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AWeaponDefault, AdditionalWeaponInfo);
+}
+
+void AWeaponDefault::ShotgunHitDecal_Multicast_Implementation(UMaterialInterface* DecalMaterial, UPrimitiveComponent* OtherComp, FHitResult HitResult)
+{
+	UGameplayStatics::SpawnDecalAttached(DecalMaterial, FVector(20.0f), OtherComp, NAME_None, HitResult.ImpactPoint, HitResult.ImpactNormal.Rotation(), EAttachLocation::KeepWorldPosition);
+}
+
+void AWeaponDefault::ShotgunHitFX_Multicast_Implementation(UParticleSystem* FxTemplate, FHitResult HitResult)
+{
+	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), FxTemplate, FTransform(HitResult.ImpactNormal.Rotation(), HitResult.ImpactPoint, FVector(1.0f)));
+}
+
+void AWeaponDefault::ShotgunHitSound_Multicast_Implementation(USoundBase* HitSound, FHitResult HitResult)
+{
+	UGameplayStatics::PlaySoundAtLocation(GetWorld(), HitSound, HitResult.ImpactPoint);
 }

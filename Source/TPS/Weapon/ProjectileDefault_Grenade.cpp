@@ -21,18 +21,18 @@ void AProjectileDefault_Grenade::BeginPlay()
 void AProjectileDefault_Grenade::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	TimerExplose(DeltaTime);
+	TimerExplode(DeltaTime);
 
 }
 
-void AProjectileDefault_Grenade::TimerExplose(float DeltaTime)
+void AProjectileDefault_Grenade::TimerExplode(float DeltaTime)
 {
 	if (TimerEnabled)
 	{
 		if (TimerToExplose > TimeToExplose)
 		{
 			//Explose
-			Explose();
+			Explode();
 			
 		}
 		else
@@ -53,8 +53,9 @@ void AProjectileDefault_Grenade::ImpactProjectile()
 	TimerEnabled = true;
 }
 
-void AProjectileDefault_Grenade::Explose()
+void AProjectileDefault_Grenade::Explode()
 {
+	FHitResult Hit;
 	if (DebugExplodeShow)
 	{
 		DrawDebugSphere(GetWorld(), GetActorLocation(), ProjectileSetting.ProjectileMinRadiusDamage, 12, FColor::Green, false, 12.0f);
@@ -63,11 +64,16 @@ void AProjectileDefault_Grenade::Explose()
 	TimerEnabled = false;
 	if (ProjectileSetting.ExploseFX)
 	{
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ProjectileSetting.ExploseFX, GetActorLocation(), GetActorRotation(), FVector(1.0f));
+		//UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ProjectileSetting.ExploseFX, GetActorLocation(), GetActorRotation(), FVector(1.0f));
+		GrenadeHitFX_Multicast(ProjectileSetting.ExploseFX, GetActorLocation(), GetActorRotation());
+		auto a = GetActorLocation().X;
+		auto b = GetActorLocation().Y;
+		OnScreenMessage_Multicast(a, b);
 	}
 	if (ProjectileSetting.ExploseSound)
 	{
-		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ProjectileSetting.ExploseSound, GetActorLocation());
+		//UGameplayStatics::PlaySoundAtLocation(GetWorld(), ProjectileSetting.ExploseSound, GetActorLocation());
+		GrenadeHitSound_Multicast(ProjectileSetting.ExploseSound, GetActorLocation());
 	}
 	TArray<AActor*> IgnoredActor;
 	UGameplayStatics::ApplyRadialDamageWithFalloff(GetWorld(),
@@ -80,4 +86,19 @@ void AProjectileDefault_Grenade::Explose()
 		UDamageType::StaticClass(), IgnoredActor, this, nullptr);
 
 	this->Destroy();
+}
+
+void AProjectileDefault_Grenade::OnScreenMessage_Multicast_Implementation(float a, float b)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::Printf(TEXT("GrenadeLocation: %f %f"), a, b));
+}
+
+void AProjectileDefault_Grenade::GrenadeHitFX_Multicast_Implementation(UParticleSystem* FxTemplate, FVector Location, FRotator Rotation)
+{
+	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), FxTemplate, Location, Rotation, FVector(1.0f));
+}
+
+void AProjectileDefault_Grenade::GrenadeHitSound_Multicast_Implementation(USoundBase* HitSound, FVector Location)
+{
+	UGameplayStatics::PlaySoundAtLocation(GetWorld(), HitSound, Location);
 }

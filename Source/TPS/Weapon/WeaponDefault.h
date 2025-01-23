@@ -34,7 +34,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category = Components)
 	class UArrowComponent* ShootLocation = nullptr;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	FWeaponInfo WeaponSetting;
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Weapon Info")
 	FAdditionalWeaponInfo AdditionalWeaponInfo;
@@ -141,6 +141,10 @@ public:
 
 	UFUNCTION(NetMulticast, Unreliable)
 	void FXWeaponFire_Multicast(UParticleSystem* FxFire, USoundBase* SoundFire);
-	//UFUNCTION(NetMulticast, Unreliable)
-
+	UFUNCTION(NetMulticast, Unreliable)
+	void ShotgunHitDecal_Multicast(UMaterialInterface* DecalMaterial, UPrimitiveComponent* OtherComp, FHitResult HitResult);
+	UFUNCTION(NetMulticast, Unreliable)
+	void ShotgunHitFX_Multicast(UParticleSystem* FxTemplate, FHitResult HitResult);
+	UFUNCTION(NetMulticast, Unreliable)
+	void ShotgunHitSound_Multicast(USoundBase* HitSound, FHitResult HitResult);
 };
