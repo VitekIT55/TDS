@@ -32,7 +32,7 @@ void AProjectileDefault_Grenade::TimerExplode(float DeltaTime)
 		if (TimerToExplose > TimeToExplose)
 		{
 			//Explose
-			Explode();
+			Explode_OnServer();
 			
 		}
 		else
@@ -56,7 +56,7 @@ void AProjectileDefault_Grenade::ImpactProjectile()
 	//OnScreenMessage_Multicast(arr, 1, TEXT);
 }
 
-void AProjectileDefault_Grenade::Explode()
+void AProjectileDefault_Grenade::Explode_OnServer_Implementation()
 {
 	//TArray<float> arr1 = { 0.0f };
 	//FString TEXT1 = "Explode!";

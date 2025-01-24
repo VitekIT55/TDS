@@ -29,7 +29,8 @@ public:
 	
 	virtual void ImpactProjectile() override;
 
-	void Explode();
+	UFUNCTION(Server, Reliable)
+	void Explode_OnServer();
 
 	//UPROPERTY(Replicated)
 	float TimerToExplose = 0.0f;

@@ -117,7 +117,7 @@ void ATPSCharacter::BeginPlay()
 
 
 	if (GetWorld() && GetWorld()->GetNetMode() != NM_DedicatedServer 
-		&& CursorMaterial && GetLocalRole() == ROLE_AutonomousProxy || GetLocalRole() == ROLE_Authority)
+		&& CursorMaterial && (GetLocalRole() == ROLE_AutonomousProxy || GetLocalRole() == ROLE_Authority))
 	{
 		CurrentCursor = UGameplayStatics::SpawnDecalAtLocation(GetWorld(), CursorMaterial, CursorSize, FVector(0));
 	}
