@@ -21,19 +21,17 @@ void AProjectileDefault_Grenade::BeginPlay()
 void AProjectileDefault_Grenade::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	TimerExplode(DeltaTime);
-
+	TimerExplode_OnServer(DeltaTime);
 }
 
-void AProjectileDefault_Grenade::TimerExplode(float DeltaTime)
+void AProjectileDefault_Grenade::TimerExplode_OnServer_Implementation(float DeltaTime)
 {
 	if (TimerEnabled)
 	{
 		if (TimerToExplose > TimeToExplose)
 		{
-			//Explose
-			Explode_OnServer();
-			
+			//Explode
+			Explode();
 		}
 		else
 		{
@@ -51,17 +49,10 @@ void AProjectileDefault_Grenade::ImpactProjectile()
 {
 	//Init Grenade
 	TimerEnabled = true;
-	//TArray<float> arr = { float(TimerEnabled) };
-	//FString TEXT = "TimerEnabled";
-	//OnScreenMessage_Multicast(arr, 1, TEXT);
 }
 
-void AProjectileDefault_Grenade::Explode_OnServer_Implementation()
+void AProjectileDefault_Grenade::Explode()
 {
-	//TArray<float> arr1 = { 0.0f };
-	//FString TEXT1 = "Explode!";
-	//OnScreenMessage_Multicast(arr1, 1, TEXT1);
-
 	FHitResult Hit;
 	if (DebugExplodeShow)
 	{
@@ -69,15 +60,8 @@ void AProjectileDefault_Grenade::Explode_OnServer_Implementation()
 		DrawDebugSphere(GetWorld(), GetActorLocation(), ProjectileSetting.ProjectileMaxRadiusDamage, 12, FColor::Red, false, 12.0f);
 	}
 	TimerEnabled = false;
-	//TArray<float> arr2 = { 1 };
-	//FString TEXT2 = ProjectileSetting.ExploseFX->GetName(); //Error on client: EXCEPTION_ACCESS_VIOLATION
-	//OnScreenMessage_Multicast(arr2, 1, TEXT2);
 	if (ProjectileSetting.ExploseFX)
 	{
-		TArray<float> arr1 = { 0.0f };
-		FString TEXT1 = "ExplodeFX!";
-		OnScreenMessage_Multicast(arr1, 1, TEXT1);
-		//UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ProjectileSetting.ExploseFX, GetActorLocation(), GetActorRotation(), FVector(1.0f));
 		GrenadeHitFX_Multicast(ProjectileSetting.ExploseFX, GetActorLocation(), GetActorRotation());
 		float a = GetActorLocation().X;
 		float b = GetActorLocation().Y;
@@ -88,7 +72,6 @@ void AProjectileDefault_Grenade::Explode_OnServer_Implementation()
 	}
 	if (ProjectileSetting.ExploseSound)
 	{
-		//UGameplayStatics::PlaySoundAtLocation(GetWorld(), ProjectileSetting.ExploseSound, GetActorLocation());
 		GrenadeHitSound_Multicast(ProjectileSetting.ExploseSound, GetActorLocation());
 	}
 	TArray<AActor*> IgnoredActor;
@@ -107,7 +90,7 @@ void AProjectileDefault_Grenade::Explode_OnServer_Implementation()
 void AProjectileDefault_Grenade::OnScreenMessage_Multicast_Implementation(const TArray<float> &a, float len, const FString &ShowText)
 {
 	//For Testing Multicast
-	GEngine->AddOnScreenDebugMessage(1, 4.0f, FColor::Red, FString::Printf(TEXT("Array lenght: %i"), sizeof(a)));
+	//GEngine->AddOnScreenDebugMessage(1, 4.0f, FColor::Red, FString::Printf(TEXT("Array lenght: %i"), sizeof(a)));
 	for (int i = 0; i < len; i++)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, FString::Printf(TEXT("%s: %f"), *ShowText, a[i]));

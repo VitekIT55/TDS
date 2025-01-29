@@ -269,8 +269,9 @@ void AWeaponDefault::Fire()
 				if (myProjectile)
 				{
 					myProjectile->InitProjectile(ProjectileInfo);
-					myProjectile->BulletProjectileMovement->InitialSpeed = ProjectileInfo.ProjectileInitSpeed;
-					myProjectile->BulletProjectileMovement->Velocity = Dir * ProjectileInfo.ProjectileInitSpeed;
+					//myProjectile->BulletProjectileMovement->InitialSpeed = ProjectileInfo.ProjectileInitSpeed;
+					//myProjectile->BulletProjectileMovement->Velocity = Dir * ProjectileInfo.ProjectileInitSpeed;
+					Projectile_Multicast(myProjectile, Dir, ProjectileInfo.ProjectileInitSpeed);
 				}
 			}
 			else
@@ -641,4 +642,10 @@ void AWeaponDefault::ShotgunHitFX_Multicast_Implementation(UParticleSystem* FxTe
 void AWeaponDefault::ShotgunHitSound_Multicast_Implementation(USoundBase* HitSound, FHitResult HitResult)
 {
 	UGameplayStatics::PlaySoundAtLocation(GetWorld(), HitSound, HitResult.ImpactPoint);
+}
+
+void AWeaponDefault::Projectile_Multicast_Implementation(AProjectileDefault* myProjectile, FVector Dir, float ProjectileInitSpeed)
+{
+	myProjectile->BulletProjectileMovement->InitialSpeed = ProjectileInitSpeed;
+	myProjectile->BulletProjectileMovement->Velocity = Dir * ProjectileInitSpeed;
 }

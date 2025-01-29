@@ -22,15 +22,15 @@ protected:
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-	//UFUNCTION(Server, Unreliable)
-	void TimerExplode(float DeltaTime);
+	UFUNCTION(Server, Reliable)
+	void TimerExplode_OnServer(float DeltaTime);
 
 	virtual void BulletCollisionSphereHit(class UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit) override;
 	
 	virtual void ImpactProjectile() override;
 
-	UFUNCTION(Server, Reliable)
-	void Explode_OnServer();
+	UFUNCTION()
+	void Explode();
 
 	//UPROPERTY(Replicated)
 	float TimerToExplose = 0.0f;
@@ -39,10 +39,10 @@ public:
 	bool TimerEnabled = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grenade")
 	float TimeToExplose = 5.0f;
-	UFUNCTION(NetMulticast, Unreliable)
+	UFUNCTION(NetMulticast, Reliable)
 	void GrenadeHitFX_Multicast(UParticleSystem* FxTemplate, FVector Location, FRotator Rotation);
-	UFUNCTION(NetMulticast, Unreliable)
+	UFUNCTION(NetMulticast, Reliable)
 	void GrenadeHitSound_Multicast(USoundBase* HitSound, FVector Location);
-	UFUNCTION(NetMulticast, Unreliable)
+	UFUNCTION(NetMulticast, Reliable)
 	void OnScreenMessage_Multicast(const TArray<float> &a, float len, const FString &ShowText);
 };

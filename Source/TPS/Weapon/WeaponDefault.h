@@ -149,4 +149,6 @@ public:
 	void ShotgunHitFX_Multicast(UParticleSystem* FxTemplate, FHitResult HitResult);
 	UFUNCTION(NetMulticast, Unreliable)
 	void ShotgunHitSound_Multicast(USoundBase* HitSound, FHitResult HitResult);
+	UFUNCTION(NetMulticast, Reliable)
+	void Projectile_Multicast(AProjectileDefault* myProjectile, FVector Dir, float ProjectileInitSpeed);
 };
